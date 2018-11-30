@@ -1,0 +1,30 @@
+FROM ubuntu:18.04
+
+RUN apt-get update && apt-get install -y \
+    git curl libxml2 build-essential \
+    libcurl4-openssl-dev libjpeg-dev \
+    libtidy-dev libfreetype6-dev libreadline-dev \
+    libxpm-dev libbz2-dev libldap2-dev libldb-dev \
+    libssl-dev libxslt-dev libicu-dev libpq-dev \
+    libxml2-dev re2c libmysqlclient-dev libpng-dev \
+    libpng-dev libcurl4 bison libxslt1-dev \
+    autoconf libmcrypt-dev pkg-config 
+
+RUN export DEBIAN_FRONTEND=noninteractive; \
+    export DEBCONF_NONINTERACTIVE_SEEN=true; \
+    echo 'tzdata tzdata/Areas select Etc' | debconf-set-selections; \
+    echo 'tzdata tzdata/Zones/Etc select UTC' | debconf-set-selections; \
+    apt-get install -y php-dev php-mysql php7.2-mbstring
+
+WORKDIR /tmp/top-pack
+COPY . .
+
+RUN curl -sS https://getcomposer.org/installer -o composer-setup.php
+RUN php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+
+RUN composer install
+RUN rm -rf /tmp/top-pack
+
+WORKDIR /var/www
+
+CMD = ["php", "-S", "0.0.0.0:8080", "-t", "public"]
